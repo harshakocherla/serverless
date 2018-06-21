@@ -1,0 +1,140 @@
+service: chitbuddy
+
+provider:
+  name: aws
+  runtime: nodejs4.3
+  region: us-east-1
+  stage: dev
+  profile: serverless
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:us-east-1:*:*"
+    - Effect: Allow
+      Action:
+        - s3:ListBucket
+      Resource: "arn:aws:s3:::*"
+    - Effect: Allow
+      Action:
+        - s3:PutBucket
+      Resource: "arn:aws:s3:::*"
+
+functions:
+  usercreate:
+    handler: userhandler.create
+    events:
+      - http:
+          path: user
+          method: post
+          cors: true
+  userreadAll:
+    handler: userhandler.readAll
+    events:
+      - http:
+          path: users
+          method: get
+          cors: true
+  userreadOne:
+    handler: userhandler.readOne
+    events:
+      - http:
+          path: users/{id}
+          method: get
+          cors: true
+  userupdate:
+    handler: userhandler.update
+    events:
+      - http:
+          path: user/{id}
+          method: put
+          cors: true
+  userdelete:
+    handler: userhandler.delete
+    events:
+      - http:
+          path: user/{id}
+          method: delete
+          cors: true
+  chitcreate:
+    handler: chithandler.create
+    events:
+      - http:
+          path: chit
+          method: post
+          cors: true
+  chitreadAll:
+    handler: chithandler.readAll
+    events:
+      - http:
+          path: chits
+          method: get
+          cors: true
+  chitreadOne:
+    handler: chithandler.readOne
+    events:
+      - http:
+          path: chits/{id}
+          method: get
+          cors: true
+  chitupdate:
+    handler: chithandler.update
+    events:
+      - http:
+          path: chit/{id}
+          method: put
+          cors: true
+  chitdelete:
+    handler: chithandler.delete
+    events:
+      - http:
+          path: chit/{id}
+          method: delete
+          cors: true
+resources:
+  Resources:
+    UsersDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:service}-${self:provider.stage}-users
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    
+        
+    ChitsDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:service}-${self:provider.stage}-chits
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    ClientBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-${self:provider.stage}-client
